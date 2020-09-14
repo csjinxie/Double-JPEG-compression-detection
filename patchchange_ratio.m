@@ -1,0 +1,72 @@
+close all;
+clear all;
+clc;
+QF = 70;
+code_dir = uigetdir(cd, '选择要添加到Matlab搜索路径的代码目录：');
+addpath(code_dir);
+%addpath([code_dir, '\jpegtbx_1.4']);
+%addpath([code_dir, '\libsvm']);
+bmp_dir = uigetdir(code_dir, '选择TIF图像目录：');
+
+cd(bmp_dir);
+%imgs = dir('*.tif');
+imgs = dir('*.bmp');
+imgNum = length(imgs);
+imgNames = {imgs.name};
+dctcoeffcient_round1=[];
+dctcoeffcient_round2=[];
+dctcoeffcient_trunc1=[];
+dctcoeffcient_trunc2=[];
+jpgcoeffcient_round1=[];
+jpgcoeffcient_round2=[];
+jpgcoeffcient_trunc1=[];
+jpgcoeffcient_trunc2=[];
+error=[];
+qt = jpeg_qtable(QF);
+
+for i = 1 : imgNum
+    cd(bmp_dir);
+    bmp_pxl1 = imread(imgNames{i});
+    bmp_pxl=rgb2gray(bmp_pxl1);
+    %bmp_pxl=bmp_pxl1;
+    jpg1_coef = jpg_cps(bmp_pxl, qt);
+    pxls2 = jpg_decps(jpg1_coef, qt);
+    jpg2_coef = jpg_cps(pxls2, qt);
+    [coef_diff1,trunc_num1,change_num1,pxl_err1,dcterr_round1,dcterr_trunc1,coeff_diff_round1,coeff_diff_trunc1]=show_change(jpg1_coef, qt);
+    [coef_diff2,trunc_num2,change_num2,pxl_err2,dcterr_round2,dcterr_trunc2,coeff_diff_round2,coeff_diff_trunc2]=show_change(jpg2_coef, qt);
+    ratio1(1,i)=trunc_num1;
+    ratio1(2,i)=change_num1;
+    ratio2(1,i)=trunc_num2;
+    ratio2(2,i)=change_num2;
+    dctcoeffcient_round1(i)=max(abs(dcterr_round1(:)));
+    dctcoeffcient_trunc1(i)=max(abs(dcterr_trunc1(:)));
+    dctcoeffcient_round2(i)=max(abs(dcterr_round2(:)));
+    dctcoeffcient_trunc2(i)=max(abs(dcterr_trunc2(:)));
+    jpgcoeffcient_round1(i)=max(coeff_diff_round1(:));
+    jpgcoeffcient_trunc1(i)=max(coeff_diff_trunc1(:));
+    jpgcoeffcient_round2(i)=max(coeff_diff_round2(:));
+    jpgcoeffcient_trunc2(i)=max(coeff_diff_trunc2(:));
+    temp=abs(pxl_err1-pxl_err2);
+    error(i)=max(temp(:));
+    sprintf('processingnums=%d',i)
+end
+[value,index]=find(ratio1(2,:)~=0);
+ aa1=(ratio1(2,index)-ratio1(1,index))./ratio1(2,index);
+ va1=sum(aa1)/length(aa1);
+ [value,index]=find(ratio2(2,:)~=0);
+ aa2=(ratio2(2,index)-ratio2(1,index))./ratio2(2,index);
+ va2=sum(aa2)/length(aa2);
+ 
+  [value,index]=find(dctcoeffcient_round1~=0);
+ avdctcoeffcient_round1=sum(dctcoeffcient_round1(index))/length(index);
+ [value,index]=find(dctcoeffcient_trunc1~=0);
+ avdctcoeffcient_trunc1=sum(dctcoeffcient_trunc1(index))/length(index);
+ 
+ 
+ [value,index]=find(dctcoeffcient_round2~=0);
+ avdctcoeffcient_round2=sum(dctcoeffcient_round2(index))/length(index);
+ [value,index]=find(dctcoeffcient_trunc2~=0);
+ avdctcoeffcient_trunc2=sum(dctcoeffcient_trunc2(index))/length(index);
+
+    
+    
